@@ -1,7 +1,10 @@
 # affine encrypt 仿射加密: 乘数加密+凯撒移位
 # 条件 gcd(key乘, len(符号集)) = 1 否则出现same mapping
 # LINK: http://inventwithpython.com/hacking/chapter15.html
-import sys, cryptomath as mathutil
+import sys
+
+sys.path.append('..')
+import cryptomath as mathutil
 
 SYMBOLS = """ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"""
 
@@ -32,16 +35,18 @@ def gen_keys(key):
 def check_keys(key_a, key_b, mode):
     if mode == 'encrypt':
         if key_a == 1:
-            sys.exit('key A 为单位元, change it')
+            sys.exit('key A == 1, change it')
         if key_b == 0:
-            sys.exit('key B 为单位元, change it')
+            sys.exit('key B == 0, change it')
     if key_a < 0 or key_b < 0 or key_b > len(SYMBOLS) - 1:
-        sys.exit('key A，B > 0 && key_b < len')
+        sys.exit('Requirement: key A，B > 0 && key_b < len')
     if mathutil.gcd(key_a, len(SYMBOLS)) != 1:
         sys.exit('Error: 乘法映射key和len不互素')
     return True
 
 
+# key: type Number
+# msg: type characters
 def encrypt_msg(key, msg):
     key_a, key_b = gen_keys(key)
     check_keys(key_a, key_b, len(SYMBOLS))
@@ -49,8 +54,8 @@ def encrypt_msg(key, msg):
     # letter
     for l in msg:
         if l in SYMBOLS:
-            o_index = SYMBOLS.find(l)
-            cipher_text += SYMBOLS[(o_index * key_a + key_b) % len(SYMBOLS)]
+            p_index = SYMBOLS.find(l)
+            cipher_text += SYMBOLS[(p_index * key_a + key_b) % len(SYMBOLS)]
         else:
             cipher_text += l
     return cipher_text
@@ -62,9 +67,9 @@ def decrypt_msg(key, msg):
     key_a_inv = mathutil.get_mod_inverse(key_a, len(SYMBOLS))
     for l in msg:
         if l in SYMBOLS:
-            o_index = SYMBOLS.find(l)
+            c_index = SYMBOLS.find(l)
             plain_text += SYMBOLS[
-                ((o_index - key_b) * key_a_inv) % len(SYMBOLS)]
+                ((c_index - key_b) * key_a_inv) % len(SYMBOLS)]
         else:
             plain_text += l
 
